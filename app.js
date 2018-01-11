@@ -8,6 +8,8 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
    console.log('%s listening to %s', server.name, server.url); 
 });
 
+var inMemoryStorage = new builder.MemoryBotStorage();
+
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
     appId: process.env.MICROSOFT_APP_ID,
@@ -21,7 +23,7 @@ server.post('/api/messages', connector.listen());
 // var bot = new builder.UniversalBot(connector, function (session) {
 //     session.send("You said: %s", session.message.text);
 // });
-var bot = new builder.UniversalBot(connector);
+var bot = new builder.UniversalBot(connector).set('storage', inMemoryStorage);;
 bot.localePath(path.join(__dirname, './locale'));
 
 // Add a global LUIS recognizer to your bot using the endpoint URL of your LUIS app
