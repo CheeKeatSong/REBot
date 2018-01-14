@@ -2,13 +2,20 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var path = require('path');
 
+// Storage adapter dependencies
+var istorage= require('./lib/IStorageClient');
+var azure = require('./lib/AzureBotStorage.js');
+var conf = require('./config/conf.js');
+
+//=========================================================
+// Bot Setup
+//=========================================================
 // Setup Restify Server
+
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
    console.log('%s listening to %s', server.name, server.url); 
 });
-
-var inMemoryStorage = new builder.MemoryBotStorage();
 
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
@@ -19,11 +26,26 @@ var connector = new builder.ChatConnector({
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 
+//=========================================================
+// Storage Session Setup
+//=========================================================
+// Store session and context temporary as cache
+// var inMemoryStorage = new builder.MemoryBotStorage();
+
+// Store session and context into mongodb
+var docDbClient = new istorage.IStorageClient();
+var tableStorage = new azure.AzureBotStorage({ gzipData: false },docDbClient);
+var bot = new builder.UniversalBot(connector).set('storage', tableStorage);//set your storage here
+
+bot.use(builder.Middleware.dialogVersion({ version: 3.0, resetCommand: /^reset/i }));
+
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
 // var bot = new builder.UniversalBot(connector, function (session) {
 //     session.send("You said: %s", session.message.text);
 // });
-var bot = new builder.UniversalBot(connector).set('storage', inMemoryStorage);;
+
+// var bot = new builder.UniversalBot(connector).set('storage', inMemoryStorage);
+var bot = new builder.UniversalBot(connector);
 bot.localePath(path.join(__dirname, './locale'));
 
 // Add a global LUIS recognizer to your bot using the endpoint URL of your LUIS app

@@ -11,6 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "botbuilder": "^3.11.0",
+    "mongodb": "^3.0.1",
     "restify": "^6.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://CKSong@bitbucket.org/CKSong/rebot.git"
   }
 }
