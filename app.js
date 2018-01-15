@@ -3,9 +3,8 @@ var builder = require('botbuilder');
 var path = require('path');
 
 // Storage adapter dependencies
-var istorage= require('./lib/IStorageClient');
-var azure = require('./lib/AzureBotStorage.js');
-var conf = require('./config/conf.js');
+const { MongoClient } = require('mongodb'); // v3.x.x
+const { MongoBotStorage } = require('botbuilder-storage');
 
 //=========================================================
 // Bot Setup
@@ -14,13 +13,13 @@ var conf = require('./config/conf.js');
 
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-   console.log('%s listening to %s', server.name, server.url); 
+	console.log('%s listening to %s', server.name, server.url); 
 });
 
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
-    appId: process.env.MICROSOFT_APP_ID,
-    appPassword: process.env.MICROSOFT_APP_PASSWORD
+	appId: process.env.MICROSOFT_APP_ID,
+	appPassword: process.env.MICROSOFT_APP_PASSWORD
 });
 
 // Listen for messages from users 
@@ -32,21 +31,49 @@ server.post('/api/messages', connector.listen());
 // Store session and context temporary as cache
 // var inMemoryStorage = new builder.MemoryBotStorage();
 
-// Store session and context into mongodb
-var docDbClient = new istorage.IStorageClient();
-var tableStorage = new azure.AzureBotStorage({ gzipData: false },docDbClient);
-var bot = new builder.UniversalBot(connector).set('storage', tableStorage);//set your storage here
+// // Store session and context into mongodb
+// var docDbClient = new istorage.IStorageClient();
+// var tableStorage = new azure.AzureBotStorage({ gzipData: false },docDbClient);
+// var bot = new builder.UniversalBot(connector).set('storage', tableStorage);//set your storage here
 
-bot.use(builder.Middleware.dialogVersion({ version: 3.0, resetCommand: /^reset/i }));
+// bot.use(builder.Middleware.dialogVersion({ version: 3.0, resetCommand: /^reset/i }));
+
 
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
 // var bot = new builder.UniversalBot(connector, function (session) {
 //     session.send("You said: %s", session.message.text);
 // });
 
-// var bot = new builder.UniversalBot(connector).set('storage', inMemoryStorage);
+// Instantiate the bot with a connector instance
 var bot = new builder.UniversalBot(connector);
 bot.localePath(path.join(__dirname, './locale'));
+
+// Connect to your host
+MongoClient.connect(host, (err, client) => {
+	if (err) { throw err };
+
+        // Define the adapter settings
+        const settings = {
+            // Required. This is the collection where all
+            // the conversation state data will be saved.
+            collection: "rebot_collection",
+
+            // Optional but recommended!
+            ttl: {
+                userData: 3600 * 24 * 365 // a year,
+                conversationData: 3600 * 24 * 7 // a week,
+                privateConversationData: 3600 * 24 * 7
+            }
+        }
+        // Select the datebase with the client
+        client = client.db('BotStorage');
+        
+        // Instantiate the adapter with the client and settings.
+        const adapter = new MongoBotStorage(client, settings)
+        
+        // Configure the bot to use the adapter.
+        bot.set('storage', adapter);
+    });
 
 // Add a global LUIS recognizer to your bot using the endpoint URL of your LUIS app
 var model = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/f36e1bc6-efcd-4903-8cc5-98c8e5a7111b?subscription-key=d52fb645ef744373b59357e4b7522a0a&timezoneOffset=0&verbose=true&q=';
@@ -55,13 +82,13 @@ var recognizer = new builder.LuisRecognizer(model);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 
 .matches('weather', (session, args) => {
-    session.send('you asked for weather' + JSON.stringify(args));
+	session.send('you asked for weather' + JSON.stringify(args));
 })
 .matches('greeting', (session, args) => {
-    session.send('Hi you!', session.message.text);
+	session.send('Hi you!', session.message.text);
 })
 .onDefault((session) => {
-    session.send('Sorry, I did not understand \'%s\'.', session.message.text);
+	session.send('Sorry, I did not understand \'%s\'.', session.message.text);
 });
 
 bot.dialog('/', intents);    
