@@ -1,94 +1,64 @@
-var restify = require('restify');
-var builder = require('botbuilder');
+// This loads the environment variables from the .env file
+require('dotenv-extended').load();
+
+var express = require('express');
 var path = require('path');
+var favicon = require('serve-favicon');
 
-// Storage adapter dependencies
-const { MongoClient } = require('mongodb'); // v3.x.x
-const { MongoBotStorage } = require('botbuilder-storage');
+// Web app
+var app = express();
+var bodyParser = require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-//=========================================================
-// Bot Setup
-//=========================================================
-// Setup Restify Server
-
-var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978, function () {
-	console.log('%s listening to %s', server.name, server.url); 
+// Register your web app routes here
+app.get('/', function (req, res, next) {
+  res.render('index', { title: 'REBot' });
 });
 
-// Create chat connector for communicating with the Bot Framework Service
-var connector = new builder.ChatConnector({
-	appId: process.env.MICROSOFT_APP_ID,
-	appPassword: process.env.MICROSOFT_APP_PASSWORD
+// Register Checkout page
+var checkout = require('./checkout');
+app.use('/checkout', checkout);
+
+// Register Bot
+var bot = require('./bot');
+app.post('/api/messages', bot.listen());
+
+// Catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
 });
 
-// Listen for messages from users 
-server.post('/api/messages', connector.listen());
+// Error handlers
 
-//=========================================================
-// Storage Session Setup
-//=========================================================
-// Store session and context temporary as cache
-// var inMemoryStorage = new builder.MemoryBotStorage();
-
-// // Store session and context into mongodb
-// var docDbClient = new istorage.IStorageClient();
-// var tableStorage = new azure.AzureBotStorage({ gzipData: false },docDbClient);
-// var bot = new builder.UniversalBot(connector).set('storage', tableStorage);//set your storage here
-
-// bot.use(builder.Middleware.dialogVersion({ version: 3.0, resetCommand: /^reset/i }));
-
-
-// Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
-// var bot = new builder.UniversalBot(connector, function (session) {
-//     session.send("You said: %s", session.message.text);
-// });
-
-// Instantiate the bot with a connector instance
-var bot = new builder.UniversalBot(connector);
-bot.localePath(path.join(__dirname, './locale'));
-
-// Connect to your host
-MongoClient.connect(host, (err, client) => {
-	if (err) { throw err };
-
-        // Define the adapter settings
-        const settings = {
-            // Required. This is the collection where all
-            // the conversation state data will be saved.
-            collection: "rebot_collection",
-
-            // Optional but recommended!
-            ttl: {
-                userData: 3600 * 24 * 365 // a year,
-                conversationData: 3600 * 24 * 7 // a week,
-                privateConversationData: 3600 * 24 * 7
-            }
-        }
-        // Select the datebase with the client
-        client = client.db('BotStorage');
-        
-        // Instantiate the adapter with the client and settings.
-        const adapter = new MongoBotStorage(client, settings)
-        
-        // Configure the bot to use the adapter.
-        bot.set('storage', adapter);
+// Development error handler, will print stacktrace
+if (app.get('env') === 'development') {
+  app.use(function (err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+      message: err.message,
+      error: err
     });
+  });
+}
 
-// Add a global LUIS recognizer to your bot using the endpoint URL of your LUIS app
-var model = 'https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/f36e1bc6-efcd-4903-8cc5-98c8e5a7111b?subscription-key=d52fb645ef744373b59357e4b7522a0a&timezoneOffset=0&verbose=true&q=';
-// bot.recognizer(new builder.LuisRecognizer(model));
-var recognizer = new builder.LuisRecognizer(model);
-var intents = new builder.IntentDialog({ recognizers: [recognizer] })
-
-.matches('weather', (session, args) => {
-	session.send('you asked for weather' + JSON.stringify(args));
-})
-.matches('greeting', (session, args) => {
-	session.send('Hi you!', session.message.text);
-})
-.onDefault((session) => {
-	session.send('Sorry, I did not understand \'%s\'.', session.message.text);
+// Production error handler, no stacktraces leaked to user
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500);
+  res.render('error', {
+    message: err.message,
+    error: {}
+  });
 });
 
-bot.dialog('/', intents);    
+// Start listening
+var port = process.env.port || process.env.PORT || 3978;
+app.listen(port, function () {
+  console.log('Web Server listening on port %s', port);
+});
