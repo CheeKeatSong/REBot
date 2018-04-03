@@ -21,21 +21,21 @@ var bot = new builder.UniversalBot(connector, function (session) {
 
     if (localizedRegex(session, [MainOptions.SelectProject]).test(session.message.text)) {
         // Order Flowers
-        return session.beginDialog('shop:/');
+        return session.beginDialog('elicitation:/');
     }
 
     var welcomeCard = new builder.HeroCard(session)
-        .title('welcome_title')
-        .subtitle('welcome_subtitle')
-        .images([
-            new builder.CardImage(session)
-                .url('https://placeholdit.imgix.net/~text?txtsize=56&txt=ReGen&w=640&h=330')
-                .alt('regen')
+    .title('welcome_title')
+    .subtitle('welcome_subtitle')
+    .images([
+        new builder.CardImage(session)
+        .url('https://placeholdit.imgix.net/~text?txtsize=56&txt=ReGen&w=640&h=330')
+        .alt('regen')
         ])
-        .buttons([
-            builder.CardAction.imBack(session, session.gettext(MainOptions.CreateProject), MainOptions.CreateProject),
-            builder.CardAction.imBack(session, session.gettext(MainOptions.SelectProject), MainOptions.SelectProject),
-            builder.CardAction.imBack(session, session.gettext(MainOptions.Support), MainOptions.Support)
+    .buttons([
+        builder.CardAction.imBack(session, session.gettext(MainOptions.CreateProject), MainOptions.CreateProject),
+        builder.CardAction.imBack(session, session.gettext(MainOptions.SelectProject), MainOptions.SelectProject),
+        builder.CardAction.imBack(session, session.gettext(MainOptions.Support), MainOptions.Support)
         ]);
 
     session.send(new builder.Message(session)
@@ -85,6 +85,9 @@ MongoClient.connect(host, (err, client) => {
 //=========================================================
 
 // Sub-Dialogs
+bot.library(require('./dialogs/elicitation').createLibrary());
+bot.library(require('./dialogs/project-selection').createLibrary());
+bot.library(require('./dialogs/basic-questions').createLibrary());
 bot.library(require('./dialogs/shop').createLibrary());
 bot.library(require('./dialogs/address').createLibrary());
 bot.library(require('./dialogs/product-selection').createLibrary());

@@ -1,0 +1,10 @@
+{
+    "title_show_more": "Want more options?",
+    "show_more": "Yes, please!",
+    "select": "Select: ",
+    "unknown_option": "I couldn't understand your selection. Please try again.",
+    "choose_project": "Please select a project:",
+    "choose_document_from_project": "Please select a document for \"%s\" project:",
+    "view_projects": "View Project",
+    "choose_this": "Select"
+}

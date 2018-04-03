@@ -1,6 +1,6 @@
 {
-    "welcome_title": "Welcome to ReGen, I am ReBot.",
-    "welcome_subtitle": "I will help you analyze what your ideal system requires!",
+    "welcome_title": "Hi! Welcome to ReGen, I am ReBot.",
+    "welcome_subtitle": "I will help you to identify your system requirements!",
     "regen": "ReGen",
     "main_options_select_project": "Select an existing project",
     "main_options_create_project": "Create a new project",

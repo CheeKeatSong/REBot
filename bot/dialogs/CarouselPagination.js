@@ -68,7 +68,6 @@ module.exports = {
                     // return selection to dialog stack
                     return next({ selected: selectedItem });
                 });
-
                 return;
             }
 

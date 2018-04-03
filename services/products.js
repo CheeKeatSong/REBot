@@ -21,6 +21,7 @@ var allProducts = _.times(17)
 var productsService = {
     // Categories
     getCategories: function (pageNumber, pageSize) {
+        console.log(allProducts);
         return pageItems(pageNumber, pageSize, allCategories);
     },
 
