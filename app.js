@@ -33,10 +33,6 @@ app.get('/', function (req, res, next) {
   res.render('index', { title: 'REBot' });
 });
 
-// Register Checkout page
-var checkout = require('./checkout');
-app.use('/checkout', checkout);
-
 // Register Bot
 var bot = require('./bot');
 app.post('/api/messages', bot.listen());

@@ -1,0 +1,16 @@
+{
+	"function_intro": "Perharps you can tell me more about '%s'",
+	"process_purpose":"What is the purpose of this process?",
+	"process_trigger":"What triggers this process to start?",
+	"process_responsible":"Who is responsible to perform this process?",
+	"process_work":"How does this process work today?",
+	"process_result":"What is the end result or output of this process?",
+	"process_exist":"Is there a system that supports this process today?",
+	"process_existing_work":"Are you able to show us how this system works?",
+	"process_existing_screenshot":"Are you able to provide us with some screen shots from this system?",
+	"process_screenshot_prompt":"Upload the image here",
+	"more_process_existing_screenshot":"Do you have more screenshot? Upload if yes",
+	"process_existing_user_guide":"Do you have a user guide for this system? If yes, tell us about it.",
+	"invalid_exist":"Perhaps you can elaborate more? (minimum 25 characters)",
+	"invalid_image":"Please add an image file"
+}

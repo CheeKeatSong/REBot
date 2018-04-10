@@ -17,7 +17,6 @@ MongoClient.connect(url, function(err, db) {
 
  col.find({}).toArray(function(err, docs) {
   assert.equal(null, err);
-      // assert.equal(2, docs.length);
       allProjects = docs;
   });
 });    
@@ -27,9 +26,6 @@ var projectsService = {
     // Projects
     getProjects: function (pageNumber, pageSize) {
         return pageItems(pageNumber, pageSize, allProjects);
-        // getAllProjects(function () {
-        //     return pageItems(pageNumber, pageSize, allProjects);
-        // });
     },
 
     // Get Single Project
@@ -56,51 +52,6 @@ var projectsService = {
         return Promise.resolve(projectDocument);
     }
 };
-
-// function getAllProjects(callback) {
-
-//     MongoClient.connect(url, function(err, db) {
-
-//        if (err) throw err;
-//        var dbo = db.db('regen');
-//        assert.equal(null, err);
-//        console.log("Connected correctly to server");
-//        var col = dbo.collection('projects');
-
-//   // get document
-//   col.find({}).project({'name':true, 'description':true}).toArray(function(err, docs) {
-//       assert.equal(null, err);
-//       // assert.equal(2, docs.length);
-//       allProjects = docs;
-//       console.log(allProjects);
-
-//       callback();
-//   });
-// });
-// }
-
-// function getAllDocuments(projectName, callback) {
-
-//     MongoClient.connect(url, function(err, db) {
-
-//        if (err) throw err;
-//        var dbo = db.db('regen');
-//        assert.equal(null, err);
-//        console.log("Connected correctly to server");
-//        var col = dbo.collection('projects');
-
-//   // get document
-//   col.find({'name':projectName}).project({'document':true, '_id':false}).toArray(function(err, docs) {
-//       assert.equal(null, err);
-//       // assert.equal(2, docs.length);
-//       console.log(docs);
-//       docs = docs[0].document;
-//       allDocuments = docs;
-
-//       callback();
-//   });
-// });    
-// }
 
 // helpers
 function pageItems(pageNumber, pageSize, items) {

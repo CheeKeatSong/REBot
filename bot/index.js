@@ -1,5 +1,7 @@
 var builder = require('botbuilder');
 var siteUrl = require('./site-url');
+var spellService = require('./spell-service');
+var luisService = require('./luis-service');
 
 // Storage adapter dependencies
 const { MongoClient } = require('mongodb'); // v3.0.1
@@ -17,30 +19,7 @@ var MainOptions = {
     Support: 'main_options_talk_to_support'
 };
 
-var bot = new builder.UniversalBot(connector, function (session) {
-
-    if (localizedRegex(session, [MainOptions.SelectProject]).test(session.message.text)) {
-        // Order Flowers
-        return session.beginDialog('elicitation:/');
-    }
-
-    var welcomeCard = new builder.HeroCard(session)
-    .title('welcome_title')
-    .subtitle('welcome_subtitle')
-    .images([
-        new builder.CardImage(session)
-        .url('https://placeholdit.imgix.net/~text?txtsize=56&txt=ReGen&w=640&h=330')
-        .alt('regen')
-        ])
-    .buttons([
-        builder.CardAction.imBack(session, session.gettext(MainOptions.CreateProject), MainOptions.CreateProject),
-        builder.CardAction.imBack(session, session.gettext(MainOptions.SelectProject), MainOptions.SelectProject),
-        builder.CardAction.imBack(session, session.gettext(MainOptions.Support), MainOptions.Support)
-        ]);
-
-    session.send(new builder.Message(session)
-        .addAttachment(welcomeCard));
-});
+var bot = new builder.UniversalBot(connector);
 
 // Enable Conversation Data persistence
 bot.set('persistConversationData', true);
@@ -50,6 +29,21 @@ bot.set('localizerSettings', {
     botLocalePath: './bot/locale',
     defaultLocale: 'en'
 });
+
+var dialog = luisService.getLUIS('/', bot);
+
+dialog.matches('weather', (session, args) => {
+    session.send('you asked for weather' + JSON.stringify(args));
+})
+dialog.matches('greeting', (session, args) => {
+    session.send('Hi you! Wanna know wat you can do? say \'help\'.', session.message.text);
+})
+dialog.matches('mainMenu', (session) => {
+    session.beginDialog('/mainMenu');
+})
+dialog.matches('help', (session) => {
+    session.beginDialog('/help');
+})
 
 //=========================================================
 // Storage Adapter Setup
@@ -88,17 +82,44 @@ MongoClient.connect(host, (err, client) => {
 bot.library(require('./dialogs/elicitation').createLibrary());
 bot.library(require('./dialogs/project-selection').createLibrary());
 bot.library(require('./dialogs/basic-questions').createLibrary());
-bot.library(require('./dialogs/shop').createLibrary());
-bot.library(require('./dialogs/address').createLibrary());
-bot.library(require('./dialogs/product-selection').createLibrary());
-bot.library(require('./dialogs/delivery').createLibrary());
-bot.library(require('./dialogs/details').createLibrary());
-bot.library(require('./dialogs/checkout').createLibrary());
-bot.library(require('./dialogs/settings').createLibrary());
+bot.library(require('./dialogs/business-process').createLibrary());
 bot.library(require('./dialogs/help').createLibrary());
 
 // Validators
 bot.library(require('./validators').createLibrary());
+
+// present the user with a main menu of choices they can select from
+bot.dialog('/mainMenu', [
+    function (session) {
+
+       if (localizedRegex(session, [MainOptions.SelectProject]).test(session.message.text)) {
+        return session.beginDialog('elicitation:/');
+    }
+
+    var welcomeCard = new builder.HeroCard(session)
+    .title('welcome_title')
+    .subtitle('welcome_subtitle')
+    .images([
+        new builder.CardImage(session)
+        .url('https://placeholdit.imgix.net/~text?txtsize=56&txt=ReGen&w=640&h=330')
+        .alt('regen')
+        ])
+    .buttons([
+        builder.CardAction.imBack(session, session.gettext(MainOptions.CreateProject), MainOptions.CreateProject),
+        builder.CardAction.imBack(session, session.gettext(MainOptions.SelectProject), MainOptions.SelectProject),
+        builder.CardAction.imBack(session, session.gettext(MainOptions.Support), MainOptions.Support)
+        ]);
+
+    session.send(new builder.Message(session)
+        .addAttachment(welcomeCard));
+}
+]);
+
+bot.dialog('/firstTime', [
+    function (session) {
+        session.send('Hi, welcome to ReGen, I am ReBot! I am here to help you to identify your system requirements!');
+        session.endDialog();
+    }]);
 
 // Trigger secondary dialogs when 'settings' or 'support' is called
 bot.use({
@@ -126,7 +147,7 @@ bot.on('conversationUpdate', function (message) {
     if (message.membersAdded) {
         message.membersAdded.forEach(function (identity) {
             if (identity.id === message.address.bot.id) {
-                bot.beginDialog(message.address, '/');
+                bot.beginDialog(message.address, '/firstTime');
             }
         });
     }
@@ -157,6 +178,24 @@ function listen() {
         siteUrl.save(url);
         connectorListener(req, res);
     };
+}
+
+// Spell Check
+if (process.env.IS_SPELL_CORRECTION_ENABLED === 'true') {
+    bot.use({
+        botbuilder: function (session, next) {
+            spellService
+            .getCorrectedText(session.message.text)
+            .then(function (text) {
+                session.message.text = text;
+                next();
+            })
+            .catch(function (error) {
+                console.error(error);
+                next();
+            });
+        }
+    });
 }
 
 // Other wrapper functions

@@ -6,7 +6,8 @@ const projectDataSchema = new mongoose.Schema({
 	documentID: String,
 	response:[{
 		category: String,
-		data: String
+		data: String,
+		img: { data: Buffer, contentType: String },
 	}, { timestamps: true }]
 }, { timestamps: true });
 

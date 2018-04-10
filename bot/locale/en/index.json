@@ -1,11 +1,11 @@
 {
-    "welcome_title": "Hi! Welcome to ReGen, I am ReBot.",
-    "welcome_subtitle": "I will help you to identify your system requirements!",
+    "welcome_title": "Main Menu",
+    "welcome_subtitle": "Please select an option",
     "regen": "ReGen",
     "main_options_select_project": "Select an existing project",
     "main_options_create_project": "Create a new project",
     "main_options_talk_to_support": "Talk to support",
     "main_options_settings": "Settings",
     "help": "Help",
-    "thank_you": "Support will contact you shortly. Have a nice day :)"
+    "thank_you": "You can chat with me! or say 'main menu' to access your projects and provide requirements."
 }
